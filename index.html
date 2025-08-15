@@ -45,6 +45,10 @@
                 margin: 0;
             }
         }
+        .active-order-type {
+            background-color: #ef4444;
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white antialiased">
@@ -77,6 +81,16 @@
         <div class="w-full lg:w-2/5 bg-gray-800 p-6 flex flex-col shadow-lg">
             <h2 class="text-2xl font-bold mb-4">Pesanan Saat Ini</h2>
             
+            <!-- NEW: Order Type Selector -->
+            <div class="mb-4">
+                <label class="block text-gray-400 mb-2 text-sm font-semibold">Tipe Pesanan</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="order-type-dine-in" onclick="setOrderType('Dine-In')" class="order-type-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-2 font-bold transition-colors active-order-type">Dine-In</button>
+                    <button id="order-type-take-away" onclick="setOrderType('Take Away')" class="order-type-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-2 font-bold transition-colors">Take Away</button>
+                    <button id="order-type-online" onclick="setOrderType('Online')" class="order-type-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-2 font-bold transition-colors">Online</button>
+                </div>
+            </div>
+
             <!-- Order Items List -->
             <div id="order-list" class="flex-grow overflow-y-auto pr-2">
                 <p id="empty-cart-message" class="text-gray-400 text-center mt-10">Keranjang masih kosong.</p>
@@ -103,7 +117,10 @@
                     <button onclick="clearCart()" class="w-full bg-red-700 hover:bg-red-800 rounded-lg py-3 font-bold transition-colors">Batal</button>
                     <button onclick="showPaymentModal()" id="pay-button" class="w-full bg-green-600 hover:bg-green-700 rounded-lg py-3 font-bold transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>Bayar</button>
                 </div>
-                 <button onclick="showHistoryModal()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 rounded-lg py-3 font-bold transition-colors">Riwayat Transaksi</button>
+                 <div class="grid grid-cols-2 gap-4 mt-4">
+                    <button onclick="showHistoryModal()" class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-3 font-bold transition-colors">Riwayat</button>
+                    <button onclick="showDashboardModal()" class="w-full bg-purple-600 hover:bg-purple-700 rounded-lg py-3 font-bold transition-colors">Dashboard</button>
+                </div>
             </div>
         </div>
     </div>
@@ -112,6 +129,15 @@
     <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
         <div class="bg-gray-800 rounded-lg p-8 w-full max-w-md shadow-xl">
             <h3 class="text-2xl font-bold mb-6 text-center">Pembayaran</h3>
+             <!-- NEW: Quick Cash Buttons -->
+            <div class="mb-4">
+                <label class="block text-gray-400 mb-2">Uang Cepat</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setQuickCash(50000)" class="bg-gray-700 hover:bg-gray-600 rounded-lg py-2 font-bold">50 rb</button>
+                    <button onclick="setQuickCash(100000)" class="bg-gray-700 hover:bg-gray-600 rounded-lg py-2 font-bold">100 rb</button>
+                    <button onclick="setQuickCash('pas')" class="bg-gray-700 hover:bg-gray-600 rounded-lg py-2 font-bold">Uang Pas</button>
+                </div>
+            </div>
             <div class="mb-4">
                 <label class="block text-gray-400 mb-2">Total Tagihan</label>
                 <input type="text" id="total-tagihan" class="w-full bg-gray-700 rounded-md p-3 text-xl font-bold text-right" readonly>
@@ -157,10 +183,22 @@
         </div>
     </div>
 
+    <!-- NEW: Dashboard Modal -->
+    <div id="dashboard-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 rounded-lg p-8 w-full max-w-4xl shadow-xl flex flex-col" style="height: 90vh;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Dashboard Penjualan Hari Ini</h3>
+                <button onclick="closeDashboardModal()" class="text-2xl">&times;</button>
+            </div>
+            <div id="dashboard-content" class="flex-grow overflow-y-auto">
+                <!-- Dashboard content will be injected here -->
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // --- DATABASE MENU ---
-        // Anda bisa dengan mudah mengubah, menambah, atau menghapus menu di sini.
         const menuItems = [
             { id: 1, name: 'Seblak Original', price: 15000, category: 'paket', image: 'https://placehold.co/300x300/ef4444/white?text=Seblak+Ori' },
             { id: 2, name: 'Seblak Ceker', price: 18000, category: 'paket', image: 'https://placehold.co/300x300/f97316/white?text=Seblak+Ceker' },
@@ -180,6 +218,7 @@
         let cart = [];
         let transactions = [];
         let currentFilter = 'semua';
+        let currentOrderType = 'Dine-In';
 
         // --- DOM ELEMENTS ---
         const menuGrid = document.getElementById('menu-grid');
@@ -196,6 +235,7 @@
         const confirmPaymentButton = document.getElementById('confirm-payment-button');
         const receiptModal = document.getElementById('receipt-modal');
         const historyModal = document.getElementById('history-modal');
+        const dashboardModal = document.getElementById('dashboard-modal');
         
         // --- UTILITY FUNCTIONS ---
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
@@ -226,13 +266,16 @@
                 emptyCartMessage.style.display = 'none';
                 payButton.disabled = false;
                 cart.forEach(item => {
+                    const noteHTML = item.note ? `<p class="text-xs text-yellow-400 truncate italic">"${item.note}"</p>` : '';
                     const orderItemHTML = `
                         <div class="flex items-center mb-3 bg-gray-700 p-2 rounded-lg">
                             <div class="flex-grow">
                                 <p class="font-semibold">${item.name}</p>
                                 <p class="text-sm text-gray-400">${formatRupiah(item.price)}</p>
+                                ${noteHTML}
                             </div>
                             <div class="flex items-center space-x-3">
+                                <button onclick="addNoteToItem(${item.id})" class="w-7 h-7 bg-blue-600 rounded-full font-bold text-xs">Note</button>
                                 <button onclick="updateQuantity(${item.id}, -1)" class="w-7 h-7 bg-gray-600 rounded-full font-bold">-</button>
                                 <span class="w-8 text-center font-semibold">${item.quantity}</span>
                                 <button onclick="updateQuantity(${item.id}, 1)" class="w-7 h-7 bg-red-500 rounded-full font-bold">+</button>
@@ -263,7 +306,7 @@
                 existingItem.quantity++;
             } else {
                 const itemToAdd = menuItems.find(item => item.id === itemId);
-                cart.push({ ...itemToAdd, quantity: 1 });
+                cart.push({ ...itemToAdd, quantity: 1, note: '' });
             }
             renderCart();
         }
@@ -278,10 +321,27 @@
             }
             renderCart();
         }
+        
+        function addNoteToItem(itemId) {
+            const itemInCart = cart.find(item => item.id === itemId);
+            if (itemInCart) {
+                const note = prompt('Masukkan catatan untuk item ini:', itemInCart.note);
+                if (note !== null) { // prompt returns null if cancelled
+                    itemInCart.note = note;
+                    renderCart();
+                }
+            }
+        }
 
         function clearCart() {
             cart = [];
             renderCart();
+        }
+
+        function setOrderType(type) {
+            currentOrderType = type;
+            document.querySelectorAll('.order-type-btn').forEach(btn => btn.classList.remove('active-order-type'));
+            document.getElementById(`order-type-${type.toLowerCase().replace(' ', '-')}`).classList.add('active-order-type');
         }
         
         // --- MODAL LOGIC ---
@@ -298,25 +358,15 @@
             paymentModal.classList.add('hidden');
         }
         
-        function showReceiptModal() {
-            receiptModal.classList.remove('hidden');
-        }
-
-        function closeReceiptModal() {
-            receiptModal.classList.add('hidden');
-        }
-        
-        function showHistoryModal() {
-            renderHistory();
-            historyModal.classList.remove('hidden');
-        }
-
-        function closeHistoryModal() {
-            historyModal.classList.add('hidden');
-        }
+        function showReceiptModal() { receiptModal.classList.remove('hidden'); }
+        function closeReceiptModal() { receiptModal.classList.add('hidden'); }
+        function showHistoryModal() { renderHistory(); historyModal.classList.remove('hidden'); }
+        function closeHistoryModal() { historyModal.classList.add('hidden'); }
+        function showDashboardModal() { renderDashboard(); dashboardModal.classList.remove('hidden'); }
+        function closeDashboardModal() { dashboardModal.classList.add('hidden'); }
 
         // --- PAYMENT & RECEIPT LOGIC ---
-        uangDiterimaInput.addEventListener('input', () => {
+        function calculateChange() {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10;
             const diterima = parseFloat(uangDiterimaInput.value) || 0;
             const kembalian = diterima - total;
@@ -328,7 +378,18 @@
                 kembalianEl.textContent = formatRupiah(0);
                 confirmPaymentButton.disabled = true;
             }
-        });
+        }
+        uangDiterimaInput.addEventListener('input', calculateChange);
+        
+        function setQuickCash(amount) {
+            if (amount === 'pas') {
+                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10;
+                uangDiterimaInput.value = Math.ceil(total);
+            } else {
+                uangDiterimaInput.value = amount;
+            }
+            calculateChange();
+        }
 
         function processPayment() {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10;
@@ -337,11 +398,12 @@
 
             const transaction = {
                 id: Date.now(),
-                items: [...cart],
+                items: JSON.parse(JSON.stringify(cart)), // Deep copy cart
                 total: total,
                 paid: diterima,
                 change: kembalian,
-                date: new Date().toISOString()
+                date: new Date().toISOString(),
+                type: currentOrderType
             };
             
             transactions.push(transaction);
@@ -360,8 +422,11 @@
 
             let itemsHTML = transaction.items.map(item => `
                 <tr>
-                    <td class="py-1">${item.name}</td>
-                    <td class="text-center">${item.quantity}</td>
+                    <td colspan="3" class="py-1">${item.name} ${item.note ? `<br><span style='font-size:10px; font-style:italic;'>(${item.note})</span>` : ''}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:10px;">${item.quantity} x ${formatRupiah(item.price)}</td>
+                    <td></td>
                     <td class="text-right">${formatRupiah(item.price * item.quantity)}</td>
                 </tr>
             `).join('');
@@ -372,15 +437,9 @@
                     <p style="text-align: center; margin-bottom: 12px; font-size: 10px;">Jl. Terminal Wonosobo No.184, Perum Purnamandala, Bumireso, Kec. Wonosobo, Kab. Wonosobo, Jawa Tengah 56351</p>
                     <p>No: ${transaction.id}</p>
                     <p>Tanggal: ${formattedDate}</p>
+                    <p>Tipe: ${transaction.type}</p>
                     <hr style="border-top: 1px dashed #000; margin: 8px 0;">
                     <table style="width: 100%;">
-                        <thead>
-                            <tr>
-                                <th class="text-left py-1">Item</th>
-                                <th class="text-center">Jml</th>
-                                <th class="text-right">Total</th>
-                            </tr>
-                        </thead>
                         <tbody>
                             ${itemsHTML}
                         </tbody>
@@ -398,9 +457,7 @@
             `;
         }
         
-        function printReceipt() {
-            window.print();
-        }
+        function printReceipt() { window.print(); }
         
         // --- HISTORY LOGIC ---
         function renderHistory() {
@@ -411,7 +468,6 @@
                  return;
             }
             
-            // Show latest first
             [...transactions].reverse().forEach(tx => {
                 const date = new Date(tx.date);
                 const itemsSummary = tx.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
@@ -419,7 +475,7 @@
                     <div class="bg-gray-700 p-4 rounded-lg mb-3">
                         <div class="flex justify-between items-center">
                             <div>
-                                <p class="font-bold">Transaksi #${tx.id}</p>
+                                <p class="font-bold">${tx.type} - #${tx.id}</p>
                                 <p class="text-sm text-gray-400">${date.toLocaleTimeString('id-ID')}</p>
                             </div>
                             <p class="font-bold text-lg text-red-400">${formatRupiah(tx.total)}</p>
@@ -431,6 +487,77 @@
             });
         }
 
+        // --- DASHBOARD LOGIC ---
+        function renderDashboard() {
+            const dashboardContentEl = document.getElementById('dashboard-content');
+            if (transactions.length === 0) {
+                dashboardContentEl.innerHTML = '<p class="text-gray-400 text-center">Belum ada data penjualan untuk ditampilkan.</p>';
+                return;
+            }
+
+            // Calculations
+            const totalRevenue = transactions.reduce((sum, tx) => sum + tx.total, 0);
+            const totalTransactions = transactions.length;
+            
+            const salesByType = transactions.reduce((acc, tx) => {
+                acc[tx.type] = (acc[tx.type] || 0) + tx.total;
+                return acc;
+            }, {});
+
+            const itemSales = transactions.flatMap(tx => tx.items).reduce((acc, item) => {
+                acc[item.name] = (acc[item.name] || 0) + item.quantity;
+                return acc;
+            }, {});
+
+            const bestSellers = Object.entries(itemSales).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            // HTML Generation
+            const statsHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-gray-700 p-6 rounded-lg text-center">
+                        <h4 class="text-gray-400 text-sm font-bold uppercase">Total Pendapatan</h4>
+                        <p class="text-3xl font-bold text-green-400">${formatRupiah(totalRevenue)}</p>
+                    </div>
+                    <div class="bg-gray-700 p-6 rounded-lg text-center">
+                        <h4 class="text-gray-400 text-sm font-bold uppercase">Total Transaksi</h4>
+                        <p class="text-3xl font-bold text-blue-400">${totalTransactions}</p>
+                    </div>
+                    <div class="bg-gray-700 p-6 rounded-lg text-center">
+                        <h4 class="text-gray-400 text-sm font-bold uppercase">Avg. per Transaksi</h4>
+                        <p class="text-3xl font-bold text-yellow-400">${formatRupiah(totalRevenue / totalTransactions)}</p>
+                    </div>
+                </div>
+            `;
+
+            const bestSellersHTML = bestSellers.map(item => `
+                <li class="flex justify-between items-center bg-gray-700 p-3 rounded-md mb-2">
+                    <span class="font-semibold">${item[0]}</span>
+                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">${item[1]} terjual</span>
+                </li>
+            `).join('');
+
+            const salesByTypeHTML = Object.entries(salesByType).map(type => `
+                <li class="flex justify-between items-center bg-gray-700 p-3 rounded-md mb-2">
+                    <span class="font-semibold">${type[0]}</span>
+                    <span class="font-bold text-green-400">${formatRupiah(type[1])}</span>
+                </li>
+            `).join('');
+
+            dashboardContentEl.innerHTML = `
+                ${statsHTML}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">Produk Terlaris</h4>
+                        <ul class="space-y-2">${bestSellersHTML}</ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">Pendapatan per Tipe Pesanan</h4>
+                        <ul class="space-y-2">${salesByTypeHTML}</ul>
+                    </div>
+                </div>
+            `;
+        }
+
         // --- DATA PERSISTENCE (LocalStorage) ---
         function saveTransactions() {
             localStorage.setItem('seblakTransactions', JSON.stringify(transactions));
@@ -440,12 +567,11 @@
             const saved = localStorage.getItem('seblakTransactions');
             if (saved) {
                 transactions = JSON.parse(saved);
-                // Simple logic to clear transactions for a new day
                 if (transactions.length > 0) {
                     const lastDate = new Date(transactions[transactions.length - 1].date);
                     const today = new Date();
                     if (lastDate.toDateString() !== today.toDateString()) {
-                        transactions = []; // It's a new day, clear history
+                        transactions = [];
                         saveTransactions();
                     }
                 }
@@ -469,7 +595,8 @@
             loadTransactions();
             renderMenu();
             renderCart();
-            filterMenu('semua'); // Set default filter
+            filterMenu('semua');
+            setOrderType('Dine-In');
         });
     </script>
 </body>
