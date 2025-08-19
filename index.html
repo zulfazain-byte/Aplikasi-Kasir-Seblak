@@ -230,7 +230,6 @@
                 </div>
                 <!-- Finansial Tab -->
                 <div id="settings-tab-finansial" class="settings-tab-content space-y-4 hidden">
-                    <div><label for="setting-currency" class="block text-slate-500 mb-2 font-semibold">Simbol Mata Uang</label><input type="text" id="setting-currency" class="w-full bg-slate-100 rounded-lg p-2.5 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"></div>
                     <div><label for="setting-tax-rate" class="block text-slate-500 mb-2 font-semibold">Tarif Pajak (%)</label><input type="number" id="setting-tax-rate" class="w-full bg-slate-100 rounded-lg p-2.5 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"></div>
                     <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg"><label for="setting-tax-enabled" class="font-semibold text-slate-700">Aktifkan Pajak</label><input type="checkbox" id="setting-tax-enabled" class="h-6 w-6 rounded text-sky-600 focus:ring-sky-500"></div>
                 </div>
@@ -280,7 +279,6 @@
             storeAddress: 'Jl. Seblak Bahagia No. 1, Wonosobo',
             taxRate: 10,
             taxEnabled: true,
-            currencySymbol: 'Rp',
             receiptFooter: 'Terima kasih! Follow IG @nyeblakkuy'
         };
         let pendingItemForLevel = null;
@@ -307,7 +305,7 @@
         };
 
         // --- UTILITY FUNCTIONS ---
-        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: settings.currencySymbol, minimumFractionDigits: 0 }).format(number);
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         
         function showConfirm(title, message, onOk) {
             const confirmModal = document.getElementById('confirm-modal');
@@ -620,7 +618,6 @@
             document.getElementById('setting-store-name').value = settings.storeName;
             document.getElementById('setting-store-address').value = settings.storeAddress;
             document.getElementById('setting-tax-rate').value = settings.taxRate;
-            document.getElementById('setting-currency').value = settings.currencySymbol;
             document.getElementById('setting-tax-enabled').checked = settings.taxEnabled;
             document.getElementById('setting-receipt-footer').value = settings.receiptFooter;
             allDOM.settingsModal.classList.remove('hidden');
@@ -631,7 +628,6 @@
             settings.storeName = document.getElementById('setting-store-name').value;
             settings.storeAddress = document.getElementById('setting-store-address').value;
             settings.taxRate = parseFloat(document.getElementById('setting-tax-rate').value) || 10;
-            settings.currencySymbol = document.getElementById('setting-currency').value || 'Rp';
             settings.taxEnabled = document.getElementById('setting-tax-enabled').checked;
             settings.receiptFooter = document.getElementById('setting-receipt-footer').value;
             
