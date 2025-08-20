@@ -89,8 +89,9 @@
         /* Print styles */
         @media print {
             body * { visibility: hidden; }
-            #receipt-print-area, #receipt-print-area * { visibility: visible; }
-            #receipt-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            #receipt-print-area, #receipt-print-area *,
+            #eod-report-print-area, #eod-report-print-area * { visibility: visible; }
+            #receipt-print-area, #eod-report-print-area { position: absolute; left: 0; top: 0; width: 100%; }
             @page { size: 80mm auto; margin: 0; }
         }
     </style>
@@ -273,6 +274,7 @@
                 <div id="settings-tab-umum" class="settings-tab-content space-y-4">
                     <div><label for="setting-store-name" class="block text-slate-500 mb-2 font-semibold">Nama Toko</label><input type="text" id="setting-store-name" class="w-full bg-slate-100 rounded-lg p-2.5 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"></div>
                     <div><label for="setting-store-address" class="block text-slate-500 mb-2 font-semibold">Alamat Toko</label><input type="text" id="setting-store-address" class="w-full bg-slate-100 rounded-lg p-2.5 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"></div>
+                    <div><label for="setting-cashier-name" class="block text-slate-500 mb-2 font-semibold">Nama Kasir</label><input type="text" id="setting-cashier-name" class="w-full bg-slate-100 rounded-lg p-2.5 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"></div>
                 </div>
                 <!-- Finansial Tab -->
                 <div id="settings-tab-finansial" class="settings-tab-content space-y-4 hidden">
@@ -285,6 +287,11 @@
                 </div>
                 <!-- Data Tab -->
                 <div id="settings-tab-data" class="settings-tab-content space-y-4 hidden">
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <h4 class="font-bold text-slate-800">Laporan Tutup Kasir</h4>
+                        <p class="text-sm text-slate-500 mb-3">Buat ringkasan penjualan untuk hari ini.</p>
+                        <button onclick="showEndOfDayReport()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-lg py-2 px-4 font-bold transition text-sm">Buat Laporan</button>
+                    </div>
                     <div class="p-4 bg-slate-50 rounded-lg">
                         <h4 class="font-bold text-slate-800">Ekspor Data</h4>
                         <p class="text-sm text-slate-500 mb-3">Unduh semua data transaksi sebagai file JSON untuk backup atau analisis.</p>
@@ -304,6 +311,30 @@
             </div>
         </div>
     </div>
+    
+    <!-- NEW: End of Day Report Modal -->
+    <div id="eod-report-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div id="eod-report-print-area">
+                <h3 class="text-2xl font-bold mb-2 text-center">Laporan Tutup Kasir</h3>
+                <p id="eod-date" class="text-center text-slate-500 mb-6"></p>
+                <div class="space-y-3">
+                    <div class="flex justify-between p-3 bg-slate-100 rounded-lg"><span class="font-semibold">Nama Kasir:</span><span id="eod-cashier-name" class="font-bold"></span></div>
+                    <div class="flex justify-between p-3 bg-slate-100 rounded-lg"><span class="font-semibold">Total Penjualan:</span><span id="eod-total-revenue" class="font-bold"></span></div>
+                    <div class="flex justify-between p-3 bg-slate-100 rounded-lg"><span class="font-semibold">Jumlah Transaksi:</span><span id="eod-total-transactions" class="font-bold"></span></div>
+                    <div class="p-3 bg-slate-100 rounded-lg">
+                        <h4 class="font-semibold mb-2">Rincian Pembayaran:</h4>
+                        <div id="eod-payment-methods" class="space-y-1 pl-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-between">
+                <button onclick="closeEndOfDayReport()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button>
+                <button onclick="printEndOfDayReport()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition">Cetak Laporan</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // --- ICONS & DATABASE ---
@@ -357,6 +388,7 @@
         let settings = {
             storeName: 'Nyeblak Kuy 🌶️',
             storeAddress: 'Jl. Seblak Bahagia No. 1, Wonosobo',
+            cashierName: 'Kasir 1',
             taxRate: 10,
             taxEnabled: true,
             receiptFooter: 'Terima kasih! Follow IG @nyeblakkuy'
@@ -387,7 +419,8 @@
             searchBar: document.getElementById('search-bar'),
             searchClearBtn: document.getElementById('search-clear-btn'),
             cashPaymentSection: document.getElementById('cash-payment-section'),
-            changeSection: document.getElementById('change-section')
+            changeSection: document.getElementById('change-section'),
+            eodReportModal: document.getElementById('eod-report-modal')
         };
 
         // --- UTILITY FUNCTIONS ---
@@ -674,7 +707,7 @@
             }).join('');
             const taxHTML = settings.taxEnabled ? `<tr><td>Pajak (${settings.taxRate}%):</td><td style="text-align: right;">${formatRupiah(transaction.tax)}</td></tr>` : '';
             const discountHTML = transaction.discount > 0 ? `<tr><td>Diskon:</td><td style="text-align: right;">- ${formatRupiah(transaction.discount)}</td></tr>` : '';
-            document.getElementById('receipt-print-area').innerHTML = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Kasir: Kasir 1</p><p>Pembayaran: ${transaction.paymentMethod}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr>${discountHTML}${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr>${transaction.paymentMethod === 'Tunai' ? `<tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr>` : ''}</table><p style="text-align: center; margin-top: 16px;">${settings.receiptFooter}</p></div>`;
+            document.getElementById('receipt-print-area').innerHTML = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Kasir: ${settings.cashierName}</p><p>Pembayaran: ${transaction.paymentMethod}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr>${discountHTML}${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr>${transaction.paymentMethod === 'Tunai' ? `<tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr>` : ''}</table><p style="text-align: center; margin-top: 16px;">${settings.receiptFooter}</p></div>`;
         }
         function printReceipt() { window.print(); }
         
@@ -754,6 +787,7 @@
         function showSettingsModal() {
             document.getElementById('setting-store-name').value = settings.storeName;
             document.getElementById('setting-store-address').value = settings.storeAddress;
+            document.getElementById('setting-cashier-name').value = settings.cashierName;
             document.getElementById('setting-tax-rate').value = settings.taxRate;
             document.getElementById('setting-tax-enabled').checked = settings.taxEnabled;
             document.getElementById('setting-receipt-footer').value = settings.receiptFooter;
@@ -764,6 +798,7 @@
         function saveSettings() {
             settings.storeName = document.getElementById('setting-store-name').value;
             settings.storeAddress = document.getElementById('setting-store-address').value;
+            settings.cashierName = document.getElementById('setting-cashier-name').value;
             settings.taxRate = parseFloat(document.getElementById('setting-tax-rate').value) || 10;
             settings.taxEnabled = document.getElementById('setting-tax-enabled').checked;
             settings.receiptFooter = document.getElementById('setting-receipt-footer').value;
@@ -823,6 +858,37 @@
                 renderInventory();
                 inputEl.value = '';
             }
+        }
+
+        function showEndOfDayReport() {
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const todaysTransactions = transactions.filter(tx => new Date(tx.date) >= startOfToday);
+            
+            const totalRevenue = todaysTransactions.reduce((sum, tx) => sum + tx.total, 0);
+            const paymentMethods = todaysTransactions.reduce((acc, tx) => {
+                acc[tx.paymentMethod] = (acc[tx.paymentMethod] || 0) + tx.total;
+                return acc;
+            }, {});
+
+            document.getElementById('eod-date').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('eod-cashier-name').textContent = settings.cashierName;
+            document.getElementById('eod-total-revenue').textContent = formatRupiah(totalRevenue);
+            document.getElementById('eod-total-transactions').textContent = todaysTransactions.length;
+            
+            const paymentMethodsEl = document.getElementById('eod-payment-methods');
+            paymentMethodsEl.innerHTML = '';
+            Object.keys(paymentMethods).forEach(method => {
+                paymentMethodsEl.innerHTML += `<div class="flex justify-between"><span class="text-slate-600">${method}:</span><span class="font-semibold">${formatRupiah(paymentMethods[method])}</span></div>`;
+            });
+            
+            allDOM.eodReportModal.classList.remove('hidden');
+        }
+        function closeEndOfDayReport() {
+            allDOM.eodReportModal.classList.add('hidden');
+        }
+        function printEndOfDayReport() {
+            window.print();
         }
 
         // --- DATA PERSISTENCE ---
