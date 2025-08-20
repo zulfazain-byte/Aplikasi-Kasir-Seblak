@@ -235,7 +235,7 @@
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center"><h3 id="confirm-title" class="text-xl font-bold mb-4 text-slate-900">Konfirmasi</h3><p id="confirm-message" class="text-slate-500 mb-6">Apakah Anda yakin?</p><div class="grid grid-cols-2 gap-4"><button id="confirm-cancel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-2 font-bold transition">Batal</button><button id="confirm-ok-btn" class="bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold transition">Yakin</button></div></div></div>
     <div id="table-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Pilih Meja</h3><button onclick="closeTableModal()" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="table-grid" class="grid grid-cols-4 md:grid-cols-6 gap-4"></div></div></div>
     <div id="inventory-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-4xl shadow-2xl flex flex-col" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Manajemen Stok</h3><button onclick="closeInventoryModal()" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="inventory-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div><div class="mt-6 flex justify-end"><button onclick="closeInventoryModal()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-2 px-5 font-bold transition">Selesai</button></div></div></div>
-    <div id="spice-level-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center"><h3 id="spice-modal-title" class="text-2xl font-bold mb-6 text-slate-900">Pilih Level Pedas</h3><div class="grid grid-cols-5 gap-3"><button onclick="confirmSpiceLevel(1)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-400 hover:text-white">1</button><button onclick="confirmSpiceLevel(2)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-500 hover:text-white">2</button><button onclick="confirmSpiceLevel(3)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-orange-500 hover:text-white">3</button><button onclick="confirmSpiceLevel(4)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-500 hover:text-white">4</button><button onclick="confirmSpiceLevel(5)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-700 hover:text-white">5</button></div><button onclick="closeSpiceLevelModal()" class="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Batal</button></div></div>
+    <div id="spice-level-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center"><h3 id="spice-modal-title" class="text-2xl font-bold mb-6 text-slate-900">Pilih Level Pedas</h3><div class="grid grid-cols-5 gap-3"><button onclick="confirmSpiceLevel(1)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-400 hover:text-white">1<span id="spice-cost-1" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(2)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-500 hover:text-white">2<span id="spice-cost-2" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(3)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-orange-500 hover:text-white">3<span id="spice-cost-3" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(4)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-500 hover:text-white">4<span id="spice-cost-4" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(5)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-700 hover:text-white">5<span id="spice-cost-5" class="block text-xs font-normal"></span></button></div><button onclick="closeSpiceLevelModal()" class="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Batal</button></div></div>
 
     <!-- Complex Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
@@ -348,6 +348,7 @@
             receiptFooter: 'Terima kasih! Follow IG @nyeblakkuy'
         };
         let pendingItemForLevel = null;
+        const spiceLevelCosts = { 1: 0, 2: 0, 3: 2000, 4: 4000, 5: 6000 };
 
         // --- DOM ELEMENTS ---
         const allDOM = {
@@ -420,14 +421,14 @@
                 cart.forEach(item => {
                     const noteHTML = item.note ? `<p class="text-xs text-amber-600 truncate italic">"${item.note}"</p>` : '';
                     const levelHTML = item.level ? `<span class="text-xs font-bold text-red-500 ml-2">Lv. ${item.level}</span>` : '';
-                    allDOM.orderList.innerHTML += `<div class="flex items-center mb-3 bg-slate-50 p-3 rounded-xl"> <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover mr-4"> <div class="flex-grow"> <p class="font-bold text-sm flex items-center">${item.name}${levelHTML}</p> <p class="text-xs text-slate-500">${formatRupiah(item.price)}</p> ${noteHTML} </div> <div class="flex items-center space-x-2"> <button onclick="addNoteToItem(${item.cartId})" class="w-8 h-8 bg-white border-2 border-slate-200 text-slate-500 hover:bg-sky-100 hover:text-sky-600 rounded-lg font-bold flex items-center justify-center transition">${ICONS.note}</button> <button onclick="updateQuantity(${item.cartId}, -1)" class="w-8 h-8 bg-white border-2 border-slate-200 text-slate-500 hover:bg-red-100 hover:text-red-600 rounded-lg font-bold flex items-center justify-center transition">${ICONS.minus}</button> <span class="w-8 text-center font-bold">${item.quantity}</span> <button onclick="updateQuantity(${item.cartId}, 1)" class="w-8 h-8 bg-sky-500 text-white hover:bg-sky-600 rounded-lg font-bold flex items-center justify-center transition">${ICONS.plus}</button> </div> </div>`;
+                    allDOM.orderList.innerHTML += `<div class="flex items-center mb-3 bg-slate-50 p-3 rounded-xl"> <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover mr-4"> <div class="flex-grow"> <p class="font-bold text-sm flex items-center">${item.name}${levelHTML}</p> <p class="text-xs text-slate-500">${item.quantity} x ${formatRupiah(item.finalPrice)}</p> ${noteHTML} </div> <div class="flex items-center space-x-2"> <button onclick="addNoteToItem(${item.cartId})" class="w-8 h-8 bg-white border-2 border-slate-200 text-slate-500 hover:bg-sky-100 hover:text-sky-600 rounded-lg font-bold flex items-center justify-center transition">${ICONS.note}</button> <button onclick="updateQuantity(${item.cartId}, -1)" class="w-8 h-8 bg-white border-2 border-slate-200 text-slate-500 hover:bg-red-100 hover:text-red-600 rounded-lg font-bold flex items-center justify-center transition">${ICONS.minus}</button> <span class="w-8 text-center font-bold">${item.quantity}</span> <button onclick="updateQuantity(${item.cartId}, 1)" class="w-8 h-8 bg-sky-500 text-white hover:bg-sky-600 rounded-lg font-bold flex items-center justify-center transition">${ICONS.plus}</button> </div> </div>`;
                 });
             }
             updateSummary();
         }
 
         function updateSummary() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subtotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
             let discountValue = discount.type === 'percentage' ? subtotal * (discount.value / 100) : discount.value;
             discountValue = Math.min(subtotal, discountValue);
             const totalAfterDiscount = subtotal - discountValue;
@@ -453,9 +454,22 @@
             if (item.category === 'paket') {
                 pendingItemForLevel = item;
                 allDOM.spiceModalTitle.textContent = `Pilih Level Pedas untuk ${item.name}`;
+                renderSpiceLevelCosts();
                 allDOM.spiceLevelModal.classList.remove('hidden');
             } else {
                 addToCart(itemId);
+            }
+        }
+
+        function renderSpiceLevelCosts() {
+            for (let i = 1; i <= 5; i++) {
+                const costEl = document.getElementById(`spice-cost-${i}`);
+                const cost = spiceLevelCosts[i];
+                if (cost > 0) {
+                    costEl.textContent = `+${formatRupiah(cost)}`;
+                } else {
+                    costEl.textContent = 'Gratis';
+                }
             }
         }
 
@@ -469,11 +483,16 @@
         function addToCart(itemId, level = null) {
             const itemData = menuItems.find(item => item.id === itemId);
             if (itemData.stock <= 0) { showToast('Stok produk habis!', 'error'); return; }
+
+            const spiceCost = level ? (spiceLevelCosts[level] || 0) : 0;
+            const finalPrice = itemData.price + spiceCost;
+            
             const existingCartItem = cart.find(item => item.id === itemId && item.level === level && !item.note);
+            
             if (existingCartItem) {
                 existingCartItem.quantity++;
             } else {
-                cart.push({ ...itemData, quantity: 1, note: '', level: level, cartId: Date.now() });
+                cart.push({ ...itemData, quantity: 1, note: '', level: level, spiceCost: spiceCost, finalPrice: finalPrice, cartId: Date.now() });
             }
             itemData.stock--;
             showToast(`${itemData.name} ${level ? `Lv. ${level}`: ''} ditambahkan`);
@@ -534,15 +553,19 @@
         }
         
         // --- MODAL & PAYMENT LOGIC ---
-        function showPaymentModal() {
-            if (currentOrderType === 'Dine-In' && currentTable === null) { showToast('Pilih meja terlebih dahulu!', 'error'); return; }
-            
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        function calculateTotal() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
             let discountValue = discount.type === 'percentage' ? subtotal * (discount.value / 100) : discount.value;
             discountValue = Math.min(subtotal, discountValue);
             const totalAfterDiscount = subtotal - discountValue;
             let tax = settings.taxEnabled ? totalAfterDiscount * (settings.taxRate / 100) : 0;
-            const total = totalAfterDiscount + tax;
+            return totalAfterDiscount + tax;
+        }
+
+        function showPaymentModal() {
+            if (currentOrderType === 'Dine-In' && currentTable === null) { showToast('Pilih meja terlebih dahulu!', 'error'); return; }
+            
+            const total = calculateTotal();
 
             allDOM.totalTagihanInput.value = formatRupiah(total);
             allDOM.uangDiterimaInput.value = '';
@@ -563,13 +586,7 @@
         function closeSpiceLevelModal() { pendingItemForLevel = null; allDOM.spiceLevelModal.classList.add('hidden'); }
 
         function calculateChange() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            let discountValue = discount.type === 'percentage' ? subtotal * (discount.value / 100) : discount.value;
-            discountValue = Math.min(subtotal, discountValue);
-            const totalAfterDiscount = subtotal - discountValue;
-            let tax = settings.taxEnabled ? totalAfterDiscount * (settings.taxRate / 100) : 0;
-            const total = totalAfterDiscount + tax;
-            
+            const total = calculateTotal();
             const diterima = parseFloat(allDOM.uangDiterimaInput.value) || 0;
             const kembalian = diterima - total;
             allDOM.confirmPaymentButton.disabled = kembalian < 0;
@@ -579,12 +596,7 @@
         
         function setQuickCash(amount) {
             if (amount === 'pas') {
-                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                let discountValue = discount.type === 'percentage' ? subtotal * (discount.value / 100) : discount.value;
-                discountValue = Math.min(subtotal, discountValue);
-                const totalAfterDiscount = subtotal - discountValue;
-                let tax = settings.taxEnabled ? totalAfterDiscount * (settings.taxRate / 100) : 0;
-                const total = totalAfterDiscount + tax;
+                const total = calculateTotal();
                 allDOM.uangDiterimaInput.value = Math.ceil(total);
             } else { allDOM.uangDiterimaInput.value = amount; }
             calculateChange();
@@ -594,7 +606,7 @@
         function removeDiscount() { discount = { type: 'fixed', value: 0 }; updateSummary(); }
 
         function processPayment() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subtotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
             let discountValue = discount.type === 'percentage' ? subtotal * (discount.value / 100) : discount.value;
             discountValue = Math.min(subtotal, discountValue);
             const totalAfterDiscount = subtotal - discountValue;
@@ -614,7 +626,11 @@
             let itemsHTML = transaction.items.map(item => {
                 const levelInfo = item.level ? ` (Lv. ${item.level})` : '';
                 const noteInfo = item.note ? `<br><span style='font-size:10px; font-style:italic;'>(${item.note})</span>` : '';
-                return `<tr><td colspan="3" class="py-1">${item.name}${levelInfo}${noteInfo}</td></tr><tr><td style="padding-left:10px;">${item.quantity} x ${formatRupiah(item.price)}</td><td></td><td class="text-right">${formatRupiah(item.price * item.quantity)}</td></tr>`;
+                let spiceCostHTML = '';
+                if (item.spiceCost > 0) {
+                    spiceCostHTML = `<tr><td style="padding-left:20px;">+ Level Pedas</td><td></td><td class="text-right">${formatRupiah(item.spiceCost * item.quantity)}</td></tr>`;
+                }
+                return `<tr><td colspan="3" class="py-1">${item.name}${levelInfo}${noteInfo}</td></tr><tr><td style="padding-left:10px;">${item.quantity} x ${formatRupiah(item.price)}</td><td></td><td class="text-right">${formatRupiah(item.price * item.quantity)}</td></tr>${spiceCostHTML}`;
             }).join('');
             const taxHTML = settings.taxEnabled ? `<tr><td>Pajak (${settings.taxRate}%):</td><td style="text-align: right;">${formatRupiah(transaction.tax)}</td></tr>` : '';
             document.getElementById('receipt-print-area').innerHTML = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Pelanggan: ${transaction.customer}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr><tr><td>Diskon:</td><td style="text-align: right;">- ${formatRupiah(transaction.discount)}</td></tr>${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr><tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr></table><p style="text-align: center; margin-top: 16px;">${settings.receiptFooter}</p></div>`;
@@ -754,7 +770,7 @@
             });
         }
         function updateStock(itemId) {
-            const inputEl = document.getElementById(`stock-change-${itemId}`); // FIX: Use itemId instead of item.id
+            const inputEl = document.getElementById(`stock-change-${itemId}`);
             const changeValue = parseInt(inputEl.value) || 0;
             const item = menuItems.find(i => i.id === itemId);
             if (item) {
