@@ -295,7 +295,7 @@
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center modal-content"><h3 id="confirm-title" class="text-xl font-bold mb-4 text-slate-900">Konfirmasi</h3><p id="confirm-message" class="text-slate-500 mb-6">Apakah Anda yakin?</p><div class="grid grid-cols-2 gap-4"><button id="confirm-cancel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-2 font-bold transition">Batal</button><button id="confirm-ok-btn" class="bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold transition">Yakin</button></div></div></div>
     <div id="table-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl modal-content"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Pilih Meja</h3><button onclick="closeModal('table-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="table-grid" class="grid grid-cols-4 md:grid-cols-6 gap-4"></div></div></div>
     <div id="inventory-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-4xl shadow-2xl flex flex-col modal-content" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Manajemen Stok</h3><button onclick="closeModal('inventory-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="inventory-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div><div class="mt-6 flex justify-end"><button onclick="closeModal('inventory-modal')" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-2 px-5 font-bold transition">Selesai</button></div></div></div>
-    <div id="spice-level-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center modal-content"><h3 id="spice-modal-title" class="text-2xl font-bold mb-6 text-slate-900">Pilih Level Pedas</h3><div class="grid grid-cols-5 gap-3"><button onclick="confirmSpiceLevel(1)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-400 hover:text-white">1<span id="spice-cost-1" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(2)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-500 hover:text-white">2<span id="spice-cost-2" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(3)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-orange-500 hover:text-white">3<span id="spice-cost-3" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(4)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-500 hover:text-white">4<span id="spice-cost-4" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(5)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-700 hover:text-white">5<span id="spice-cost-5" class="block text-xs font-normal"></span></button></div><button onclick="closeModal('spice-level-modal')" class="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Batal</button></div></div>
+    <div id="spice-level-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center modal-content"><h3 id="spice-modal-title" class="text-2xl font-bold mb-6 text-slate-900">Pilih Level Pedas</h3><div class="grid grid-cols-3 sm:grid-cols-5 gap-3"><button onclick="confirmSpiceLevel(1)" class="flex flex-col items-center justify-center p-3 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-400 hover:text-white h-20">1<span id="spice-cost-1" class="text-xs font-normal mt-1"></span></button><button onclick="confirmSpiceLevel(2)" class="flex flex-col items-center justify-center p-3 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-500 hover:text-white h-20">2<span id="spice-cost-2" class="text-xs font-normal mt-1"></span></button><button onclick="confirmSpiceLevel(3)" class="flex flex-col items-center justify-center p-3 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-orange-500 hover:text-white h-20">3<span id="spice-cost-3" class="text-xs font-normal mt-1"></span></button><button onclick="confirmSpiceLevel(4)" class="flex flex-col items-center justify-center p-3 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-500 hover:text-white h-20">4<span id="spice-cost-4" class="text-xs font-normal mt-1"></span></button><button onclick="confirmSpiceLevel(5)" class="flex flex-col items-center justify-center p-3 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-700 hover:text-white h-20">5<span id="spice-cost-5" class="block text-xs font-normal"></span></button></div><button onclick="closeModal('spice-level-modal')" class="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Batal</button></div></div>
 
     <!-- Complex Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
@@ -661,6 +661,7 @@
         // --- MODAL & PAYMENT LOGIC ---
         function showModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.add('show');
@@ -670,6 +671,7 @@
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.remove('show');
             modal.firstElementChild.classList.remove('show');
             setTimeout(() => modal.classList.add('hidden'), 300);
@@ -795,6 +797,8 @@
         }
 
         // --- HISTORY & DASHBOARD ---
+        function showHistoryModal() { renderHistory(); showModal('history-modal'); }
+        function showDashboardModal() { renderDashboard('today'); showModal('dashboard-modal'); }
         function renderHistory() {
             const historyListEl = document.getElementById('history-list');
             historyListEl.innerHTML = '';
@@ -808,8 +812,11 @@
         }
         function renderDashboard(range, event) {
             document.querySelectorAll('.dashboard-range-btn').forEach(btn => btn.classList.remove('bg-sky-500', 'text-white'));
-            if(event) event.target.classList.add('bg-sky-500', 'text-white');
-            else document.querySelector(`.dashboard-range-btn[onclick*="'${range}'"]`).classList.add('bg-sky-500', 'text-white');
+            if(event) {
+                event.target.classList.add('bg-sky-500', 'text-white');
+            } else {
+                document.querySelector(`.dashboard-range-btn[onclick*="'${range}'"]`).classList.add('bg-sky-500', 'text-white');
+            }
             
             const now = new Date();
             const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -854,7 +861,7 @@
             document.getElementById('setting-tax-enabled').checked = settings.taxEnabled;
             document.getElementById('setting-receipt-footer').value = settings.receiptFooter;
             showModal('settings-modal');
-            switchSettingsTab(event, 'umum');
+            switchSettingsTab(null, 'umum');
         }
         
         function saveSettings() {
@@ -876,7 +883,8 @@
             document.querySelectorAll('.settings-tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.settings-tab').forEach(el => el.classList.remove('active'));
             document.getElementById(`settings-tab-${tabName}`).classList.remove('hidden');
-            if(event) event.target.classList.add('active');
+            const button = event ? event.target : document.querySelector(`.settings-tab[onclick*="'${tabName}'"]`);
+            if (button) button.classList.add('active');
         }
         function exportData() {
             const dataStr = JSON.stringify({ transactions, menuItems, settings }, null, 2);
@@ -904,7 +912,7 @@
         function renderInventory() {
             allDOM.inventoryList.innerHTML = '';
             menuItems.forEach(item => {
-                allDOM.inventoryList.innerHTML += `<div class="flex items-center justify-between p-3 rounded-lg odd:bg-slate-50"><div class="flex items-center"><img src="${item.image}" class="w-10 h-10 rounded-md object-cover mr-4"><span class="font-semibold">${item.name}</span></div><div class="flex items-center space-x-3"><span class="font-bold text-lg w-12 text-center">${item.stock}</span><input type="number" id="stock-change-${item.id}" class="w-20 bg-slate-100 rounded-md p-2 text-center" placeholder="+/-"><button onclick="updateStock(${item.id})" class="bg-sky-500 text-white font-semibold px-3 py-1.5 rounded-lg text-sm">Update</button></div></div>`;
+                allDOM.inventoryList.innerHTML += `<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg odd:bg-slate-50"><div class="flex items-center mb-2 sm:mb-0"><img src="${item.image}" class="w-10 h-10 rounded-md object-cover mr-4"><span class="font-semibold">${item.name}</span></div><div class="flex items-center justify-end space-x-3"><span class="font-bold text-lg w-12 text-center">${item.stock}</span><input type="number" id="stock-change-${item.id}" class="w-20 bg-slate-100 rounded-md p-2 text-center" placeholder="+/-"><button onclick="updateStock(${item.id})" class="bg-sky-500 text-white font-semibold px-3 py-1.5 rounded-lg text-sm">Update</button></div></div>`;
             });
         }
         function updateStock(itemId) {
