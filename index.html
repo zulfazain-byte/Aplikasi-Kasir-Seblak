@@ -46,15 +46,18 @@
         }
         .modal-backdrop { 
             backdrop-filter: blur(4px); 
-            transition: background-color 0.3s ease;
+            transition: opacity 0.3s ease;
         }
         .modal-content {
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            transform: scale(0.95);
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            transform: scale(0.95) translateY(10px);
             opacity: 0;
         }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
         .modal-backdrop.show .modal-content {
-            transform: scale(1);
+            transform: scale(1) translateY(0);
             opacity: 1;
         }
 
@@ -101,36 +104,27 @@
         /* Print styles */
         @media print {
             body * { visibility: hidden; }
-            #receipt-print-area, #receipt-print-area *,
-            #eod-report-print-area, #eod-report-print-area * { visibility: visible; }
+            .printable-area, .printable-area * { visibility: visible; }
             
-            #receipt-print-area, #eod-report-print-area { 
+            .printable-area { 
                 position: absolute; 
                 left: 0; 
                 top: 0; 
                 width: 100%; 
             }
-            .receipt-copy {
-                page-break-after: always;
-                width: 80mm;
-            }
-            .receipt-copy:last-child {
-                page-break-after: avoid;
-            }
-            #eod-report-print-area {
-                width: 210mm; /* A4 width */
-                height: 297mm; /* A4 height */
-            }
-            @page { 
+            @page receipt { 
                 size: 80mm auto; 
                 margin: 0; 
             }
-            @page a4-report {
-                size: A4;
+            @page report {
+                size: A4 portrait;
                 margin: 20mm;
             }
+            #receipt-print-area {
+                page: receipt;
+            }
             #eod-report-print-area {
-                page: a4-report;
+                page: report;
             }
         }
     </style>
@@ -283,7 +277,18 @@
             </div>
         </div>
     </div>
-    <div id="receipt-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl modal-content"><div id="receipt-print-area"></div><div class="mt-6 flex justify-between"><button onclick="closeModal('receipt-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button><button onclick="printReceipt()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition">Cetak Nota</button></div></div></div>
+    <div id="receipt-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl modal-content flex flex-col" style="height: 80vh;">
+            <h3 class="text-xl font-bold text-center mb-4">Pratinjau Nota</h3>
+            <div class="flex-grow overflow-y-auto border border-slate-200 rounded-lg p-2">
+                <div id="receipt-print-area" class="printable-area"></div>
+            </div>
+            <div class="mt-6 flex justify-between">
+                <button onclick="closeModal('receipt-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button>
+                <button onclick="printReceipt()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition">Cetak Nota</button>
+            </div>
+        </div>
+    </div>
     <div id="history-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-3xl shadow-2xl flex flex-col modal-content" style="height: 85vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Riwayat Transaksi</h3><button onclick="closeModal('history-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="history-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div></div></div>
     <div id="dashboard-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-6xl shadow-2xl flex flex-col modal-content" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Dashboard Penjualan</h3><div class="flex space-x-2 p-1 bg-slate-100 rounded-lg"><button onclick="renderDashboard('today')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">Hari Ini</button><button onclick="renderDashboard('7days')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">7 Hari</button><button onclick="renderDashboard('30days')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">30 Hari</button></div><button onclick="closeModal('dashboard-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="dashboard-content" class="flex-grow overflow-y-auto pr-2 -mr-2"></div></div></div>
     <div id="discount-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl modal-content"><h3 class="text-2xl font-bold mb-6 text-center text-slate-900">Atur Diskon</h3><div class="mb-4"><label for="discount-type" class="block text-slate-500 mb-2 font-semibold">Tipe Diskon</label><select id="discount-type" class="w-full bg-slate-100 rounded-lg p-3 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"><option value="percentage">Persentase (%)</option><option value="fixed">Nominal (Rp)</option></select></div><div class="mb-6"><label for="discount-value" class="block text-slate-500 mb-2 font-semibold">Nilai Diskon</label><input type="number" id="discount-value" class="w-full bg-white border-2 border-slate-200 rounded-lg p-3 focus:border-sky-500 focus:outline-none transition" placeholder="0" min="0"></div><div class="grid grid-cols-2 gap-4"><button onclick="removeDiscount()" class="bg-red-100 hover:bg-red-200 text-red-800 rounded-xl py-3 font-bold transition">Hapus</button><button onclick="applyDiscount()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-3 font-bold transition">Terapkan</button></div><button onclick="closeModal('discount-modal')" class="w-full mt-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Tutup</button></div></div>
@@ -358,18 +363,21 @@
     
     <!-- End of Day Report Modal -->
     <div id="eod-report-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl modal-content">
-            <div id="eod-report-print-area">
-                <h3 class="text-2xl font-bold mb-2 text-center">Laporan Tutup Kasir</h3>
-                <p id="eod-date" class="text-center text-slate-500 mb-6"></p>
-                <div class="space-y-3">
-                    <div class="flex justify-between p-3 bg-slate-100 rounded-lg"><span class="font-semibold">Nama Kasir:</span><span id="eod-cashier-name" class="font-bold"></span></div>
-                    <div class="flex justify-between p-3 bg-slate-100 rounded-lg"><span class="font-semibold">Total Penjualan:</span><span id="eod-total-revenue" class="font-bold"></span></div>
-                    <div class="flex justify-between p-3 bg-slate-100 rounded-lg"><span class="font-semibold">Jumlah Transaksi:</span><span id="eod-total-transactions" class="font-bold"></span></div>
-                    <div class="p-3 bg-slate-100 rounded-lg">
-                        <h4 class="font-semibold mb-2">Rincian Pembayaran:</h4>
-                        <div id="eod-payment-methods" class="space-y-1 pl-2"></div>
-                    </div>
+        <div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-2xl shadow-2xl modal-content">
+            <div id="eod-report-print-area" class="printable-area p-8">
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold text-slate-900" id="eod-store-name"></h3>
+                    <p class="text-slate-500">Laporan Penjualan Harian</p>
+                    <p id="eod-date" class="text-slate-500 text-sm"></p>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-8 text-center">
+                    <div class="p-4 bg-slate-100 rounded-lg"><span class="block text-sm text-slate-500">Total Penjualan</span><span id="eod-total-revenue" class="text-2xl font-bold"></span></div>
+                    <div class="p-4 bg-slate-100 rounded-lg"><span class="block text-sm text-slate-500">Jumlah Transaksi</span><span id="eod-total-transactions" class="text-2xl font-bold"></span></div>
+                    <div class="p-4 bg-slate-100 rounded-lg"><span class="block text-sm text-slate-500">Kasir Bertugas</span><span id="eod-cashier-name" class="text-2xl font-bold"></span></div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Rincian Pembayaran</h4>
+                    <div id="eod-payment-methods" class="space-y-2 border-t pt-4"></div>
                 </div>
             </div>
             <div class="mt-6 flex justify-between">
@@ -471,7 +479,6 @@
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         
         function showConfirm(title, message, onOk) {
-            const confirmModal = document.getElementById('confirm-modal');
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').textContent = message;
             showModal('confirm-modal');
@@ -655,12 +662,16 @@
         function showModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.add('show'), 10);
+            setTimeout(() => {
+                modal.classList.add('show');
+                modal.firstElementChild.classList.add('show');
+            }, 10);
         }
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('show');
+            modal.firstElementChild.classList.remove('show');
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
@@ -756,12 +767,9 @@
             const taxHTML = settings.taxEnabled ? `<tr><td>Pajak (${settings.taxRate}%):</td><td style="text-align: right;">${formatRupiah(transaction.tax)}</td></tr>` : '';
             const discountHTML = transaction.discount > 0 ? `<tr><td>Diskon:</td><td style="text-align: right;">- ${formatRupiah(transaction.discount)}</td></tr>` : '';
             
-            const receiptBase = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Kasir: ${transaction.cashierName}</p><p>Pembayaran: ${transaction.paymentMethod}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr>${discountHTML}${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr>${transaction.paymentMethod === 'Tunai' ? `<tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr>` : ''}</table><p style="text-align: center; margin-top: 16px;">##COPY_TEXT##</p><p style="text-align: center; margin-top: 4px;">${settings.receiptFooter}</p></div>`;
+            const receiptBase = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Kasir: ${transaction.cashierName}</p><p>Pembayaran: ${transaction.paymentMethod}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr>${discountHTML}${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr>${transaction.paymentMethod === 'Tunai' ? `<tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr>` : ''}</table><p style="text-align: center; margin-top: 16px;">${settings.receiptFooter}</p></div>`;
 
-            const customerCopy = receiptBase.replace('##COPY_TEXT##', '--- Struk Pelanggan ---');
-            const cashierCopy = receiptBase.replace('##COPY_TEXT##', '--- Arsip Kasir ---');
-
-            document.getElementById('receipt-print-area').innerHTML = `<div class="receipt-copy">${customerCopy}</div><div class="receipt-copy">${cashierCopy}</div>`;
+            document.getElementById('receipt-print-area').innerHTML = `<div class="receipt-copy">${receiptBase}</div>`;
         }
         function printReceipt() { window.print(); }
         
@@ -923,6 +931,7 @@
                 return acc;
             }, {});
 
+            document.getElementById('eod-store-name').textContent = settings.storeName;
             document.getElementById('eod-date').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('eod-cashier-name').textContent = settings.cashierName;
             document.getElementById('eod-total-revenue').textContent = formatRupiah(totalRevenue);
@@ -931,7 +940,7 @@
             const paymentMethodsEl = document.getElementById('eod-payment-methods');
             paymentMethodsEl.innerHTML = '';
             Object.keys(paymentMethods).forEach(method => {
-                paymentMethodsEl.innerHTML += `<div class="flex justify-between"><span class="text-slate-600">${method}:</span><span class="font-semibold">${formatRupiah(paymentMethods[method])}</span></div>`;
+                paymentMethodsEl.innerHTML += `<div class="flex justify-between border-b pb-1"><span class="text-slate-600">${method}:</span><span class="font-semibold">${formatRupiah(paymentMethods[method])}</span></div>`;
             });
             
             showModal('eod-report-modal');
