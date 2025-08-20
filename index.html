@@ -754,7 +754,7 @@
             });
         }
         function updateStock(itemId) {
-            const inputEl = document.getElementById(`stock-change-${item.id}`);
+            const inputEl = document.getElementById(`stock-change-${itemId}`); // FIX: Use itemId instead of item.id
             const changeValue = parseInt(inputEl.value) || 0;
             const item = menuItems.find(i => i.id === itemId);
             if (item) {
@@ -775,10 +775,25 @@
             const savedData = localStorage.getItem('seblakAppData');
             if (savedData) {
                 const appData = JSON.parse(savedData);
-                menuItems = appData.menuItems || menuItems;
+                const savedMenuItems = appData.menuItems || [];
                 transactions = appData.transactions || [];
                 tables = appData.tables || tables;
                 settings = { ...settings, ...appData.settings };
+
+                // FIX: Merge initial menu with saved menu to add new items and update existing ones
+                const updatedMenuItems = initialMenuItems.map(initialItem => {
+                    const savedItem = savedMenuItems.find(saved => saved.id === initialItem.id);
+                    if (savedItem) {
+                        // Item exists, update its info but keep its stock
+                        return { ...initialItem, stock: savedItem.stock };
+                    }
+                    // It's a new item, return it as is
+                    return initialItem;
+                });
+                menuItems = updatedMenuItems;
+            } else {
+                // No saved data, use initial data
+                menuItems = JSON.parse(JSON.stringify(initialMenuItems));
             }
         }
 
