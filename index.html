@@ -21,7 +21,7 @@
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* Custom styles */
+        /* Custom styles & Animations */
         .category-tab.active-tab {
             background-color: #0ea5e9; /* bg-sky-500 */
             color: white;
@@ -44,7 +44,19 @@
             padding: 8px 16px; border-radius: 9999px;
             font-weight: bold; font-size: 14px;
         }
-        .modal-backdrop { backdrop-filter: blur(4px); }
+        .modal-backdrop { 
+            backdrop-filter: blur(4px); 
+            transition: background-color 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .modal-backdrop.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
 
         /* Toast Notification */
         #toast-container {
@@ -91,8 +103,35 @@
             body * { visibility: hidden; }
             #receipt-print-area, #receipt-print-area *,
             #eod-report-print-area, #eod-report-print-area * { visibility: visible; }
-            #receipt-print-area, #eod-report-print-area { position: absolute; left: 0; top: 0; width: 100%; }
-            @page { size: 80mm auto; margin: 0; }
+            
+            #receipt-print-area, #eod-report-print-area { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+            }
+            .receipt-copy {
+                page-break-after: always;
+                width: 80mm;
+            }
+            .receipt-copy:last-child {
+                page-break-after: avoid;
+            }
+            #eod-report-print-area {
+                width: 210mm; /* A4 width */
+                height: 297mm; /* A4 height */
+            }
+            @page { 
+                size: 80mm auto; 
+                margin: 0; 
+            }
+            @page a4-report {
+                size: A4;
+                margin: 20mm;
+            }
+            #eod-report-print-area {
+                page: a4-report;
+            }
         }
     </style>
 </head>
@@ -204,7 +243,7 @@
 
     <!-- Modals -->
     <div id="payment-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-sm sm:max-w-md shadow-2xl">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm sm:max-w-md shadow-2xl modal-content">
             <h3 class="text-2xl font-bold mb-6 text-center text-slate-900">Detail Pembayaran</h3>
             <div>
                 <div class="mb-4">
@@ -239,23 +278,23 @@
                 <span id="kembalian" class="font-bold text-green-700">Rp 0</span>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="closePaymentModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition-colors">Tutup</button>
+                <button onclick="closeModal('payment-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition-colors">Tutup</button>
                 <button onclick="processPayment()" id="confirm-payment-button" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-3 font-bold transition-colors shadow-lg shadow-sky-500/30 disabled:bg-slate-300 disabled:shadow-none" disabled>Konfirmasi Bayar</button>
             </div>
         </div>
     </div>
-    <div id="receipt-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl"><div id="receipt-print-area" class="p-2"></div><div class="mt-6 flex justify-between"><button onclick="closeReceiptModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button><button onclick="printReceipt()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition">Cetak Nota</button></div></div></div>
-    <div id="history-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-3xl shadow-2xl flex flex-col" style="height: 85vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Riwayat Transaksi</h3><button onclick="closeHistoryModal()" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="history-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div></div></div>
-    <div id="dashboard-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-6xl shadow-2xl flex flex-col" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Dashboard Penjualan</h3><div class="flex space-x-2 p-1 bg-slate-100 rounded-lg"><button onclick="renderDashboard('today')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">Hari Ini</button><button onclick="renderDashboard('7days')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">7 Hari</button><button onclick="renderDashboard('30days')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">30 Hari</button></div><button onclick="closeDashboardModal()" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="dashboard-content" class="flex-grow overflow-y-auto pr-2 -mr-2"></div></div></div>
-    <div id="discount-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl"><h3 class="text-2xl font-bold mb-6 text-center text-slate-900">Atur Diskon</h3><div class="mb-4"><label for="discount-type" class="block text-slate-500 mb-2 font-semibold">Tipe Diskon</label><select id="discount-type" class="w-full bg-slate-100 rounded-lg p-3 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"><option value="percentage">Persentase (%)</option><option value="fixed">Nominal (Rp)</option></select></div><div class="mb-6"><label for="discount-value" class="block text-slate-500 mb-2 font-semibold">Nilai Diskon</label><input type="number" id="discount-value" class="w-full bg-white border-2 border-slate-200 rounded-lg p-3 focus:border-sky-500 focus:outline-none transition" placeholder="0" min="0"></div><div class="grid grid-cols-2 gap-4"><button onclick="removeDiscount()" class="bg-red-100 hover:bg-red-200 text-red-800 rounded-xl py-3 font-bold transition">Hapus</button><button onclick="applyDiscount()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-3 font-bold transition">Terapkan</button></div><button onclick="closeDiscountModal()" class="w-full mt-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Tutup</button></div></div>
-    <div id="confirm-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center"><h3 id="confirm-title" class="text-xl font-bold mb-4 text-slate-900">Konfirmasi</h3><p id="confirm-message" class="text-slate-500 mb-6">Apakah Anda yakin?</p><div class="grid grid-cols-2 gap-4"><button id="confirm-cancel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-2 font-bold transition">Batal</button><button id="confirm-ok-btn" class="bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold transition">Yakin</button></div></div></div>
-    <div id="table-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Pilih Meja</h3><button onclick="closeTableModal()" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="table-grid" class="grid grid-cols-4 md:grid-cols-6 gap-4"></div></div></div>
-    <div id="inventory-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-4xl shadow-2xl flex flex-col" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Manajemen Stok</h3><button onclick="closeInventoryModal()" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="inventory-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div><div class="mt-6 flex justify-end"><button onclick="closeInventoryModal()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-2 px-5 font-bold transition">Selesai</button></div></div></div>
-    <div id="spice-level-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center"><h3 id="spice-modal-title" class="text-2xl font-bold mb-6 text-slate-900">Pilih Level Pedas</h3><div class="grid grid-cols-5 gap-3"><button onclick="confirmSpiceLevel(1)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-400 hover:text-white">1<span id="spice-cost-1" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(2)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-500 hover:text-white">2<span id="spice-cost-2" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(3)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-orange-500 hover:text-white">3<span id="spice-cost-3" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(4)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-500 hover:text-white">4<span id="spice-cost-4" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(5)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-700 hover:text-white">5<span id="spice-cost-5" class="block text-xs font-normal"></span></button></div><button onclick="closeSpiceLevelModal()" class="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Batal</button></div></div>
+    <div id="receipt-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl modal-content"><div id="receipt-print-area"></div><div class="mt-6 flex justify-between"><button onclick="closeModal('receipt-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button><button onclick="printReceipt()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition">Cetak Nota</button></div></div></div>
+    <div id="history-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-3xl shadow-2xl flex flex-col modal-content" style="height: 85vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Riwayat Transaksi</h3><button onclick="closeModal('history-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="history-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div></div></div>
+    <div id="dashboard-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-6xl shadow-2xl flex flex-col modal-content" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Dashboard Penjualan</h3><div class="flex space-x-2 p-1 bg-slate-100 rounded-lg"><button onclick="renderDashboard('today')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">Hari Ini</button><button onclick="renderDashboard('7days')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">7 Hari</button><button onclick="renderDashboard('30days')" class="dashboard-range-btn px-3 py-1 rounded-md text-sm font-semibold">30 Hari</button></div><button onclick="closeModal('dashboard-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="dashboard-content" class="flex-grow overflow-y-auto pr-2 -mr-2"></div></div></div>
+    <div id="discount-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl modal-content"><h3 class="text-2xl font-bold mb-6 text-center text-slate-900">Atur Diskon</h3><div class="mb-4"><label for="discount-type" class="block text-slate-500 mb-2 font-semibold">Tipe Diskon</label><select id="discount-type" class="w-full bg-slate-100 rounded-lg p-3 border-2 border-transparent focus:border-sky-500 focus:outline-none transition"><option value="percentage">Persentase (%)</option><option value="fixed">Nominal (Rp)</option></select></div><div class="mb-6"><label for="discount-value" class="block text-slate-500 mb-2 font-semibold">Nilai Diskon</label><input type="number" id="discount-value" class="w-full bg-white border-2 border-slate-200 rounded-lg p-3 focus:border-sky-500 focus:outline-none transition" placeholder="0" min="0"></div><div class="grid grid-cols-2 gap-4"><button onclick="removeDiscount()" class="bg-red-100 hover:bg-red-200 text-red-800 rounded-xl py-3 font-bold transition">Hapus</button><button onclick="applyDiscount()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-3 font-bold transition">Terapkan</button></div><button onclick="closeModal('discount-modal')" class="w-full mt-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Tutup</button></div></div>
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center modal-content"><h3 id="confirm-title" class="text-xl font-bold mb-4 text-slate-900">Konfirmasi</h3><p id="confirm-message" class="text-slate-500 mb-6">Apakah Anda yakin?</p><div class="grid grid-cols-2 gap-4"><button id="confirm-cancel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-2 font-bold transition">Batal</button><button id="confirm-ok-btn" class="bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold transition">Yakin</button></div></div></div>
+    <div id="table-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl modal-content"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Pilih Meja</h3><button onclick="closeModal('table-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="table-grid" class="grid grid-cols-4 md:grid-cols-6 gap-4"></div></div></div>
+    <div id="inventory-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-4xl shadow-2xl flex flex-col modal-content" style="height: 90vh;"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-900">Manajemen Stok</h3><button onclick="closeModal('inventory-modal')" class="text-3xl text-slate-400 hover:text-slate-600 transition">&times;</button></div><div id="inventory-list" class="flex-grow overflow-y-auto pr-2 -mr-2"></div><div class="mt-6 flex justify-end"><button onclick="closeModal('inventory-modal')" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-2 px-5 font-bold transition">Selesai</button></div></div></div>
+    <div id="spice-level-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4"><div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center modal-content"><h3 id="spice-modal-title" class="text-2xl font-bold mb-6 text-slate-900">Pilih Level Pedas</h3><div class="grid grid-cols-5 gap-3"><button onclick="confirmSpiceLevel(1)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-400 hover:text-white">1<span id="spice-cost-1" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(2)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-amber-500 hover:text-white">2<span id="spice-cost-2" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(3)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-orange-500 hover:text-white">3<span id="spice-cost-3" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(4)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-500 hover:text-white">4<span id="spice-cost-4" class="block text-xs font-normal"></span></button><button onclick="confirmSpiceLevel(5)" class="p-4 rounded-lg font-bold text-lg transition bg-slate-100 hover:bg-red-700 hover:text-white">5<span id="spice-cost-5" class="block text-xs font-normal"></span></button></div><button onclick="closeModal('spice-level-modal')" class="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-3 font-bold transition">Batal</button></div></div>
 
     <!-- Complex Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-lg sm:max-w-2xl shadow-2xl">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-lg sm:max-w-2xl shadow-2xl modal-content">
             <h3 class="text-2xl font-bold mb-6 text-slate-900">Pengaturan Aplikasi</h3>
             
             <!-- Tabs -->
@@ -264,7 +303,7 @@
                     <button onclick="switchSettingsTab('umum')" class="settings-tab active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">Umum</button>
                     <button onclick="switchSettingsTab('finansial')" class="settings-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Finansial</button>
                     <button onclick="switchSettingsTab('struk')" class="settings-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Struk</button>
-                    <button onclick="switchSettingsTab('data')" class="settings-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Data</button>
+                    <button onclick="switchSettingsTab('data')" class="settings-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Data & Laporan</button>
                 </nav>
             </div>
 
@@ -285,16 +324,21 @@
                 <div id="settings-tab-struk" class="settings-tab-content space-y-4 hidden">
                     <div><label for="setting-receipt-footer" class="block text-slate-500 mb-2 font-semibold">Pesan Footer Struk</label><textarea id="setting-receipt-footer" rows="3" class="w-full bg-slate-100 rounded-lg p-2.5 border-2 border-transparent focus:border-sky-500 focus:outline-none transition" placeholder="Contoh: Terima kasih! Follow IG @nyeblakkuy"></textarea></div>
                 </div>
-                <!-- Data Tab -->
+                <!-- Data & Laporan Tab -->
                 <div id="settings-tab-data" class="settings-tab-content space-y-4 hidden">
                     <div class="p-4 bg-slate-50 rounded-lg">
-                        <h4 class="font-bold text-slate-800">Laporan Tutup Kasir</h4>
-                        <p class="text-sm text-slate-500 mb-3">Buat ringkasan penjualan untuk hari ini.</p>
-                        <button onclick="showEndOfDayReport()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-lg py-2 px-4 font-bold transition text-sm">Buat Laporan</button>
+                        <h4 class="font-bold text-slate-800">Laporan Harian (Tutup Kasir)</h4>
+                        <p class="text-sm text-slate-500 mb-3">Cetak ringkasan penjualan hari ini dalam format A4.</p>
+                        <button onclick="showEndOfDayReport()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-lg py-2 px-4 font-bold transition text-sm">Cetak Laporan Harian</button>
                     </div>
                     <div class="p-4 bg-slate-50 rounded-lg">
-                        <h4 class="font-bold text-slate-800">Ekspor Data</h4>
-                        <p class="text-sm text-slate-500 mb-3">Unduh semua data transaksi sebagai file JSON untuk backup atau analisis.</p>
+                        <h4 class="font-bold text-slate-800">Laporan Bulanan</h4>
+                        <p class="text-sm text-slate-500 mb-3">Unduh rekapitulasi penjualan bulan ini per kasir dalam format JSON.</p>
+                        <button onclick="downloadMonthlyReport()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-lg py-2 px-4 font-bold transition text-sm">Unduh Laporan Bulanan</button>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <h4 class="font-bold text-slate-800">Ekspor Semua Data</h4>
+                        <p class="text-sm text-slate-500 mb-3">Unduh semua data transaksi sebagai file JSON untuk backup.</p>
                         <button onclick="exportData()" class="bg-green-500 hover:bg-green-600 text-white rounded-lg py-2 px-4 font-bold transition text-sm">Ekspor Transaksi</button>
                     </div>
                     <div class="p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
@@ -306,15 +350,15 @@
             </div>
 
             <div class="mt-8 flex justify-end space-x-4">
-                <button onclick="closeSettingsModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-2 px-5 font-bold transition">Batal</button>
+                <button onclick="closeModal('settings-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl py-2 px-5 font-bold transition">Batal</button>
                 <button onclick="saveSettings()" class="bg-sky-500 hover:bg-sky-600 text-white rounded-xl py-2 px-5 font-bold transition">Simpan</button>
             </div>
         </div>
     </div>
     
-    <!-- NEW: End of Day Report Modal -->
+    <!-- End of Day Report Modal -->
     <div id="eod-report-modal" class="fixed inset-0 bg-slate-900 bg-opacity-30 modal-backdrop flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <div class="bg-white text-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl modal-content">
             <div id="eod-report-print-area">
                 <h3 class="text-2xl font-bold mb-2 text-center">Laporan Tutup Kasir</h3>
                 <p id="eod-date" class="text-center text-slate-500 mb-6"></p>
@@ -329,7 +373,7 @@
                 </div>
             </div>
             <div class="mt-6 flex justify-between">
-                <button onclick="closeEndOfDayReport()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button>
+                <button onclick="closeModal('eod-report-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition">Tutup</button>
                 <button onclick="printEndOfDayReport()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition">Cetak Laporan</button>
             </div>
         </div>
@@ -430,12 +474,11 @@
             const confirmModal = document.getElementById('confirm-modal');
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').textContent = message;
-            confirmModal.classList.remove('hidden');
+            showModal('confirm-modal');
             const okBtn = document.getElementById('confirm-ok-btn');
             const cancelBtn = document.getElementById('confirm-cancel-btn');
-            const hide = () => confirmModal.classList.add('hidden');
-            okBtn.onclick = () => { onOk(); hide(); };
-            cancelBtn.onclick = hide;
+            okBtn.onclick = () => { onOk(); closeModal('confirm-modal'); };
+            cancelBtn.onclick = () => closeModal('confirm-modal');
         }
 
         function showToast(message, type = 'success') {
@@ -511,7 +554,7 @@
                 pendingItemForLevel = item;
                 allDOM.spiceModalTitle.textContent = `Pilih Level Pedas untuk ${item.name}`;
                 renderSpiceLevelCosts();
-                allDOM.spiceLevelModal.classList.remove('hidden');
+                showModal('spice-level-modal');
             } else {
                 addToCart(itemId);
             }
@@ -532,7 +575,7 @@
         function confirmSpiceLevel(level) {
             if (pendingItemForLevel) {
                 addToCart(pendingItemForLevel.id, level);
-                closeSpiceLevelModal();
+                closeModal('spice-level-modal');
             }
         }
 
@@ -609,6 +652,18 @@
         }
         
         // --- MODAL & PAYMENT LOGIC ---
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
         function calculateTotal() {
             const subtotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
             let discountValue = discount.type === 'percentage' ? subtotal * (discount.value / 100) : discount.value;
@@ -628,21 +683,10 @@
             allDOM.uangDiterimaInput.value = '';
             allDOM.kembalianEl.textContent = formatRupiah(0);
             selectPaymentMethod('Tunai'); // Default to cash
-            allDOM.paymentModal.classList.remove('hidden');
+            showModal('payment-modal');
             allDOM.uangDiterimaInput.focus();
         }
-        function closePaymentModal() { allDOM.paymentModal.classList.add('hidden'); }
-        function showReceiptModal() { allDOM.receiptModal.classList.remove('hidden'); }
-        function closeReceiptModal() { allDOM.receiptModal.classList.add('hidden'); }
-        function showHistoryModal() { renderHistory(); allDOM.historyModal.classList.remove('hidden'); }
-        function closeHistoryModal() { allDOM.historyModal.classList.add('hidden'); }
-        function showDashboardModal() { renderDashboard('today'); allDOM.dashboardModal.classList.remove('hidden'); }
-        function closeDashboardModal() { allDOM.dashboardModal.classList.add('hidden'); if(salesChart) { salesChart.destroy(); } }
-        function showDiscountModal() { document.getElementById('discount-type').value = discount.type; document.getElementById('discount-value').value = discount.value; allDOM.discountModal.classList.remove('hidden'); }
-        function closeDiscountModal() { allDOM.discountModal.classList.add('hidden'); }
-        function showSpiceLevelModal() { allDOM.spiceLevelModal.classList.remove('hidden'); }
-        function closeSpiceLevelModal() { pendingItemForLevel = null; allDOM.spiceLevelModal.classList.add('hidden'); }
-
+        
         function calculateChange() {
             const total = calculateTotal();
             const diterima = parseFloat(allDOM.uangDiterimaInput.value) || 0;
@@ -660,7 +704,7 @@
             calculateChange();
         }
 
-        function applyDiscount() { discount.type = document.getElementById('discount-type').value; discount.value = parseFloat(document.getElementById('discount-value').value) || 0; updateSummary(); closeDiscountModal(); }
+        function applyDiscount() { discount.type = document.getElementById('discount-type').value; discount.value = parseFloat(document.getElementById('discount-value').value) || 0; updateSummary(); closeModal('discount-modal'); }
         function removeDiscount() { discount = { type: 'fixed', value: 0 }; updateSummary(); }
 
         function selectPaymentMethod(method) {
@@ -687,10 +731,14 @@
             const total = totalAfterDiscount + tax;
             const diterima = (currentPaymentMethod !== 'Tunai') ? total : parseFloat(allDOM.uangDiterimaInput.value);
             
-            const transaction = { id: Date.now(), items: JSON.parse(JSON.stringify(cart)), subtotal, discount: discountValue, tax, total, paid: diterima, change: diterima - total, date: new Date().toISOString(), type: currentOrderType, customer: allDOM.customerNameInput.value || 'N/A', table: currentTable, paymentMethod: currentPaymentMethod };
+            const transaction = { id: Date.now(), items: JSON.parse(JSON.stringify(cart)), subtotal, discount: discountValue, tax, total, paid: diterima, change: diterima - total, date: new Date().toISOString(), type: currentOrderType, customer: allDOM.customerNameInput.value || 'N/A', table: currentTable, paymentMethod: currentPaymentMethod, cashierName: settings.cashierName };
             transactions.push(transaction);
             showToast('Transaksi berhasil!');
-            saveData(); generateReceipt(transaction); showReceiptModal(); closePaymentModal(); clearCart();
+            saveData(); 
+            generateReceipt(transaction); 
+            showModal('receipt-modal'); 
+            closeModal('payment-modal'); 
+            clearCart();
         }
         
         function generateReceipt(transaction) {
@@ -707,13 +755,18 @@
             }).join('');
             const taxHTML = settings.taxEnabled ? `<tr><td>Pajak (${settings.taxRate}%):</td><td style="text-align: right;">${formatRupiah(transaction.tax)}</td></tr>` : '';
             const discountHTML = transaction.discount > 0 ? `<tr><td>Diskon:</td><td style="text-align: right;">- ${formatRupiah(transaction.discount)}</td></tr>` : '';
-            document.getElementById('receipt-print-area').innerHTML = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Kasir: ${settings.cashierName}</p><p>Pembayaran: ${transaction.paymentMethod}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr>${discountHTML}${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr>${transaction.paymentMethod === 'Tunai' ? `<tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr>` : ''}</table><p style="text-align: center; margin-top: 16px;">${settings.receiptFooter}</p></div>`;
+            
+            const receiptBase = `<div style="font-family: 'Courier New', monospace; font-size: 12px; color: #000;"><h3 style="text-align: center; font-size: 16px; margin-bottom: 8px;">${settings.storeName}</h3><p style="text-align: center; margin-bottom: 12px; font-size: 10px;">${settings.storeAddress}</p><p>No: ${transaction.id}</p><p>Tanggal: ${formattedDate}</p><p>Tipe: ${transaction.type}${transaction.table ? ` / Meja ${transaction.table}` : ''}</p><p>Kasir: ${transaction.cashierName}</p><p>Pembayaran: ${transaction.paymentMethod}</p><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tbody>${itemsHTML}</tbody></table><hr style="border-top: 1px dashed #000; margin: 8px 0;"><table style="width: 100%;"><tr><td>Subtotal:</td><td style="text-align: right;">${formatRupiah(transaction.subtotal)}</td></tr>${discountHTML}${taxHTML}<tr><td style="font-weight: bold;">Total:</td><td style="text-align: right; font-weight: bold;">${formatRupiah(transaction.total)}</td></tr><tr><td>Bayar:</td><td style="text-align: right;">${formatRupiah(transaction.paid)}</td></tr>${transaction.paymentMethod === 'Tunai' ? `<tr><td>Kembali:</td><td style="text-align: right;">${formatRupiah(transaction.change)}</td></tr>` : ''}</table><p style="text-align: center; margin-top: 16px;">##COPY_TEXT##</p><p style="text-align: center; margin-top: 4px;">${settings.receiptFooter}</p></div>`;
+
+            const customerCopy = receiptBase.replace('##COPY_TEXT##', '--- Struk Pelanggan ---');
+            const cashierCopy = receiptBase.replace('##COPY_TEXT##', '--- Arsip Kasir ---');
+
+            document.getElementById('receipt-print-area').innerHTML = `<div class="receipt-copy">${customerCopy}</div><div class="receipt-copy">${cashierCopy}</div>`;
         }
         function printReceipt() { window.print(); }
         
         // --- TABLE MANAGEMENT ---
-        function showTableModal() { renderTables(); allDOM.tableModal.classList.remove('hidden'); }
-        function closeTableModal() { allDOM.tableModal.classList.add('hidden'); }
+        function showTableModal() { renderTables(); showModal('table-modal'); }
         function renderTables() {
             allDOM.tableGrid.innerHTML = '';
             tables.forEach(table => {
@@ -730,7 +783,7 @@
             newTable.status = 'occupied';
             allDOM.tableNumberDisplay.textContent = newTable.id;
             allDOM.tableDisplay.classList.remove('hidden');
-            closeTableModal();
+            closeModal('table-modal');
         }
 
         // --- HISTORY & DASHBOARD ---
@@ -791,10 +844,10 @@
             document.getElementById('setting-tax-rate').value = settings.taxRate;
             document.getElementById('setting-tax-enabled').checked = settings.taxEnabled;
             document.getElementById('setting-receipt-footer').value = settings.receiptFooter;
-            allDOM.settingsModal.classList.remove('hidden');
+            showModal('settings-modal');
             switchSettingsTab('umum');
         }
-        function closeSettingsModal() { allDOM.settingsModal.classList.add('hidden'); }
+        
         function saveSettings() {
             settings.storeName = document.getElementById('setting-store-name').value;
             settings.storeAddress = document.getElementById('setting-store-address').value;
@@ -808,7 +861,7 @@
             updateSummary();
             saveData();
             showToast('Pengaturan disimpan!');
-            closeSettingsModal();
+            closeModal('settings-modal');
         }
         function switchSettingsTab(tabName) {
             document.querySelectorAll('.settings-tab-content').forEach(el => el.classList.add('hidden'));
@@ -838,8 +891,7 @@
             location.reload(); // Reload to apply changes
         }
 
-        function showInventoryModal() { renderInventory(); allDOM.inventoryModal.classList.remove('hidden'); }
-        function closeInventoryModal() { allDOM.inventoryModal.classList.add('hidden'); renderMenu(allDOM.searchBar.value); }
+        function showInventoryModal() { renderInventory(); showModal('inventory-modal'); }
         function renderInventory() {
             allDOM.inventoryList.innerHTML = '';
             menuItems.forEach(item => {
@@ -882,13 +934,34 @@
                 paymentMethodsEl.innerHTML += `<div class="flex justify-between"><span class="text-slate-600">${method}:</span><span class="font-semibold">${formatRupiah(paymentMethods[method])}</span></div>`;
             });
             
-            allDOM.eodReportModal.classList.remove('hidden');
-        }
-        function closeEndOfDayReport() {
-            allDOM.eodReportModal.classList.add('hidden');
+            showModal('eod-report-modal');
         }
         function printEndOfDayReport() {
             window.print();
+        }
+        function downloadMonthlyReport() {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthlyTransactions = transactions.filter(tx => new Date(tx.date) >= startOfMonth);
+
+            const report = monthlyTransactions.reduce((acc, tx) => {
+                const cashier = tx.cashierName || 'Unknown';
+                if (!acc[cashier]) {
+                    acc[cashier] = { totalSales: 0, transactionCount: 0 };
+                }
+                acc[cashier].totalSales += tx.total;
+                acc[cashier].transactionCount++;
+                return acc;
+            }, {});
+            
+            const dataStr = JSON.stringify(report, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `laporan_bulanan_${now.getFullYear()}-${now.getMonth()+1}.json`;
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            showToast('Laporan bulanan berhasil diunduh!');
         }
 
         // --- DATA PERSISTENCE ---
